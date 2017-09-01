@@ -1,0 +1,15 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: digitalocean-provisioner
+spec:
+  containers:
+    - name: digitalocean-provisioner
+      image: quay.io/stackpoint/digitalocean-provisioner
+      args:
+        - "-provisioner=digitalocean/flex-volume-provisioner"
+        - "-flex-driver=digitalocean"
+        - "-token-namespace=kube-system"
+        - "-token-secret=digitalocean"
+        - "-token-key=access-token"
+      imagePullPolicy: "Always"

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-clean: clean-aws/efs clean-ceph/cephfs clean-ceph/rbd clean-flex clean-gluster/block clean-gluster/glusterfs clean-iscsi/targetd clean-local-volume/provisioner clean-local-volume/bootstrapper clean-nfs-client clean-nfs
+clean: clean-aws/efs clean-ceph/cephfs clean-ceph/rbd clean-flex clean-gluster/block clean-gluster/glusterfs clean-iscsi/targetd clean-local-volume/provisioner clean-local-volume/bootstrapper clean-nfs-client clean-nfs clean-digitalocean
 .PHONY: clean
 
 test: test-aws/efs test-local-volume/provisioner test-nfs
@@ -133,12 +133,12 @@ clean-nfs-client:
 	rm -f nfs-client-provisioner
 .PHONY: clean-nfs-client
 
-nfs: 
+nfs:
 	cd nfs; \
 	make container
 .PHONY: nfs
 
-test-nfs: 
+test-nfs:
 	cd nfs; \
 	make test
 .PHONY: test-nfs
@@ -197,3 +197,13 @@ push-nfs-provisioner:
 	cd nfs; \
 	make push
 .PHONY: push-nfs-provisioner
+
+digitalocean:
+	cd digitalocean/flex-volume; \
+	make container
+.PHONY: digitalocean
+
+clean-digitalocean:
+	cd digitalocean/flex-volume; \
+	make clean
+.PHONY: clean-digitalocean

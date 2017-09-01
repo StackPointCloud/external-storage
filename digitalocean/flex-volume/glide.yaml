@@ -1,0 +1,24 @@
+package: github.com/kubernetes-incubator/external-storage/digitalocean/flex-volume
+import:
+- package: github.com/digitalocean/godo
+- package: github.com/golang/glog
+- package: github.com/kubernetes-incubator/external-storage
+  subpackages:
+  - lib/controller
+  - lib/gidallocator
+- package: golang.org/x/oauth2
+- package: k8s.io/api
+  subpackages:
+  - core/v1
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/apis/meta/v1
+  - pkg/util/wait
+- package: k8s.io/client-go
+  subpackages:
+  - kubernetes
+  - rest
+  - tools/clientcmd
+- package: k8s.io/kubernetes
+  subpackages:
+  - pkg/volume
