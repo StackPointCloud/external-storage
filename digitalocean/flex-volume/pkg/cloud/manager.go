@@ -24,6 +24,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// VolumeManager is a Digital Ocean cloud volumes operations interface
+type VolumeManager interface {
+	CreateVolume(name, description string, sizeGB int) (*godo.Volume, error)
+	DeleteVolume(volumeID string) error
+}
+
 // DigitalOceanManager communicates with the DO API
 type DigitalOceanManager struct {
 	client *godo.Client

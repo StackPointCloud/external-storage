@@ -1,6 +1,23 @@
+/*
+Copyright 2017 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package volume
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -20,35 +37,37 @@ const (
 	volumeNameMaxLenght = 64
 )
 
+type allocatorInterface interface {
+	AllocateNext(options controller.VolumeOptions) (int, error)
+	Release(volume *v1.PersistentVolume) error
+}
+
 type digitalOceanProvisioner struct {
-	client       kubernetes.Interface
-	digitalocean *cloud.DigitalOceanManager
-	token        string
-	allocator    gidallocator.Allocator
-	flexDriver   string
+	client    kubernetes.Interface
+	manager   cloud.VolumeManager
+	token     string
+	allocator allocatorInterface
+	// gidallocator.Allocator
+	flexDriver string
 }
 
 // NewDigitalOceanProvisioner creates a Digital Ocean volume provisioner
-func NewDigitalOceanProvisioner(client kubernetes.Interface, do *cloud.DigitalOceanManager, flexDriver string) (controller.Provisioner, error) {
-
-	return newDigitalOceanProvisionerInternal(client, do, flexDriver)
-}
-
-func newDigitalOceanProvisionerInternal(client kubernetes.Interface, do *cloud.DigitalOceanManager, flexDriver string) (*digitalOceanProvisioner, error) {
+func NewDigitalOceanProvisioner(client kubernetes.Interface, do cloud.VolumeManager, flexDriver string) (controller.Provisioner, error) {
 
 	if client == nil {
-		return nil, fmt.Errorf("Provisioner needs the kubernetes client")
+		return nil, errors.New("Provisioner needs the kubernetes client")
 	}
 
 	if do == nil {
-		return nil, fmt.Errorf("Provisioner needs the Digital Ocean client")
+		return nil, errors.New("Provisioner needs the Digital Ocean client")
 	}
 
+	allocator := gidallocator.New(client)
 	return &digitalOceanProvisioner{
-		client:       client,
-		digitalocean: do,
-		allocator:    gidallocator.New(client),
-		flexDriver:   flexDriver,
+		client:     client,
+		manager:    do,
+		allocator:  &allocator,
+		flexDriver: flexDriver,
 	}, nil
 }
 
@@ -103,27 +122,16 @@ func (p *digitalOceanProvisioner) Provision(options controller.VolumeOptions) (*
 // createVolume creates a volume at Digital Ocean
 func (p *digitalOceanProvisioner) createVolume(options controller.VolumeOptions) (*godo.Volume, error) {
 
-	name := generateVolumeName(options.PVName)
 	capacity := options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
 	sizeGB := int(volume.RoundUpSize(capacity.Value(), 1024*1024*1024))
 
-	glog.V(5).Infof("Creating Digital Ocean volume %s sized %d GB", name, sizeGB)
-	vol, err := p.digitalocean.CreateVolume(name, volumeDescription, sizeGB)
+	glog.V(5).Infof("Creating Digital Ocean volume %s sized %d GB", options.PVName, sizeGB)
+	vol, err := p.manager.CreateVolume(options.PVName, volumeDescription, sizeGB)
 	if err != nil {
 		return nil, err
 	}
 
 	return vol, nil
-}
-
-func generateVolumeName(name string) string {
-	prefix := "kubernetes-dynamic"
-	nameLen := len(name)
-
-	if nameLen+1+len(prefix) > volumeNameMaxLenght {
-		prefix = prefix[:volumeNameMaxLenght-nameLen-1]
-	}
-	return prefix + "-" + name
 }
 
 // Delete removes the directory that was created by Provision backing the given
@@ -145,5 +153,5 @@ func (p *digitalOceanProvisioner) Delete(volume *v1.PersistentVolume) error {
 	}
 
 	glog.V(5).Infof("Deleting Digital Ocean volume %q ", volID)
-	return p.digitalocean.DeleteVolume(volID)
+	return p.manager.DeleteVolume(volID)
 }

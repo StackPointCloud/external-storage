@@ -20,7 +20,9 @@ ifeq ($(VERSION),)
 	VERSION = latest
 endif
 
-all build:
+all: build
+
+build: ci
 	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o digitalocean-provisioner ./cmd/digitalocean-provisioner
 .PHONY: all build
 
@@ -31,6 +33,20 @@ quick-container:
 	cp digitalocean-provisioner deploy/docker/digitalocean-provisioner
 	docker build -t $(REGISTRY):$(VERSION) deploy/docker
 .PHONY: quick-container
+
+ci: govet gofmt test
+.PHONY: ci
+gofmt:
+	ci/gofmt.sh
+.PHONY: gofmt
+
+govet:
+	go vet $(shell go list ./... | grep -v vendor)
+.PHONY: govet
+
+test:
+	go test $(shell go list ./... | grep -v vendor)
+.PHONY: test
 
 push: container
 	docker push $(REGISTRY):$(VERSION)
