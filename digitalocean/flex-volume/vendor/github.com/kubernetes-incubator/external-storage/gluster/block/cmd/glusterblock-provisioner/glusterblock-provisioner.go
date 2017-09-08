@@ -49,7 +49,7 @@ const (
 	creatorAnn         = "kubernetes.io/createdby"
 	volumeTypeAnn      = "gluster.org/type"
 	descAnn            = "Gluster-external: Dynamically provisioned PV"
-	provisionerVersion = "v0.9"
+	provisionerVersion = "v1.0.0"
 	chapType           = "kubernetes.io/iscsi-chap"
 	blockVolPrefix     = "blockvol_"
 	heketiOpmode       = "heketi"
@@ -236,8 +236,9 @@ func (p *glusterBlockProvisioner) Provision(options controller.VolumeOptions) (*
 		secretName := "glusterblk-" + iscsiVol.User + "-secret"
 		secretRef, err = p.createSecretRef(nameSpace, secretName, iscsiVol.User, iscsiVol.AuthKey)
 		if err != nil {
-			glog.Errorf(" failed to create CHAP auth credentials for pv")
+			glog.Errorf(" failed to create CHAP auth credentials for pv, error: %v", err)
 			return nil, fmt.Errorf(" failed to create CHAP auth credentials for pv")
+
 		}
 		iscsiVol.SessionCHAPAuth = cfg.chapAuthEnabled
 		iscsiVol.BlockSecret = secretName
@@ -247,8 +248,8 @@ func (p *glusterBlockProvisioner) Provision(options controller.VolumeOptions) (*
 		iscsiVol.SessionCHAPAuth = false
 		secretRef = nil
 	} else {
-		glog.Errorf(" chapauth enabled - but CHAP credentials are missing in the response")
-		return nil, fmt.Errorf(" chapauth enabled - but CHAP credentials are missing in the response")
+		glog.Errorf(" chapauth enabled - but CHAP credentials are missing in the %v response", cfg.opMode)
+		return nil, fmt.Errorf(" chapauth enabled - but CHAP credentials are missing in the %v response", cfg.opMode)
 	}
 
 	var blockString []string
@@ -322,16 +323,16 @@ func (p *glusterBlockProvisioner) createSecretRef(nameSpace string, secretName s
 		_, err = p.client.Core().Secrets(nameSpace).Create(secret)
 		if err != nil && errors.IsAlreadyExists(err) {
 
-			glog.V(1).Infof(" secret [%s] already exist in namespace [%s]", secret, nameSpace)
+			glog.V(1).Infof(" secret: %s already exist in namespace: %s", secret, nameSpace)
 			err = nil
 		}
 		if err != nil {
-			return nil, fmt.Errorf(" failed to create secret, error %v", err)
+			return nil, fmt.Errorf(" failed to create secret:%s, error:%v", secret, err)
 		}
 
 		if secretRef != nil {
 			secretRef.Name = secretName
-			glog.V(1).Infof(" secret [%v]: secretRef [%v]", secret, secretRef)
+			glog.V(1).Infof(" secret:%v and secretRef:%v", secret, secretRef)
 		}
 	} else {
 		return nil, fmt.Errorf(" secret is nil")
@@ -372,6 +373,7 @@ func (p *glusterBlockProvisioner) createVolume(volSizeInt int, blockVol string, 
 		execBlockRes := &blockRes.glusterBlockExecVolRes
 		unmarshErr := json.Unmarshal([]byte(out), execBlockRes)
 		if unmarshErr != nil {
+			glog.Errorf("failed to unmarshal gluster-block command response, error: %v", unmarshErr)
 			return nil, fmt.Errorf(" failed to unmarshal gluster-block command response")
 		}
 
@@ -388,6 +390,8 @@ func (p *glusterBlockProvisioner) createVolume(volSizeInt int, blockVol string, 
 			}
 			unmarshErr = json.Unmarshal([]byte(out), execBlockRes)
 			if unmarshErr != nil {
+
+				glog.Errorf("failed to unmarshal gluster-block command response, error: %v", unmarshErr)
 				return nil, fmt.Errorf(" failed to unmarshal auth response from gluster-block command output")
 			}
 			if *execBlockRes == nil {
