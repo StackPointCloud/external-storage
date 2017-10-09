@@ -88,13 +88,13 @@ func main() {
 	}
 
 	glog.Info("Creating Profitbricks client")
-	do, err := cloud.NewDigitalOceanManager(token)
+	do, err := cloud.NewProfitbricksManager(token)
 	if err != nil {
-		glog.Fatalf("Error creating Digital Ocean client: %v", err.Error())
+		glog.Fatalf("Error creating Profitbricks client: %v", err.Error())
 	}
 
 	// Create the provisioner
-	glog.Infof("Creating Digital Ocean provisioner %q", *provisioner)
+	glog.Infof("Creating Profitbricks provisioner %q", *provisioner)
 	digitaloceanProvisioner, err := volume.NewDigitalOceanProvisioner(clientset, do, *flexDriver)
 	if err != nil {
 		glog.Fatalf("Error creating Digital Ocean provisioner: %v", err.Error())

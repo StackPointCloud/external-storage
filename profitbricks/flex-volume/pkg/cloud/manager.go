@@ -28,14 +28,13 @@ import (
 
 // VolumeManager is a Digital Ocean cloud volumes operations interface
 type VolumeManager interface {
-	CreateVolume(name, datacenter, description string, sizeGB int) (*godo.Volume, error)
-	DeleteVolume(volumeID string, datacenter) error
+	CreateVolume(name, datacenter, sizeGB int, volumeType string) (*profitbricks.Volume, error)
+	DeleteVolume(datacenter string, volumeID string) error
 }
 
-// DigitalOceanManager communicates with the DO API
-type DigitalOceanManager struct {
-	client *godo.Client
-	region string
+// ProfitbricksManager communicates with the PB API
+type ProfitbricksManager struct {
+	client *profitbricks
 }
 
 // // TokenSource represents and oauth2 token source
@@ -55,44 +54,44 @@ type DigitalOceanManager struct {
 func NewProfitbricksManager(datacenter string, user string, password string) (*ProfitbricksManager, error) {
 
 	if user == "" || password == "" {
-		return nil, errors.New("Digital Ocean credentials must be informed")
+		return nil, errors.New("Profitbricks credentials must be informed")
 	}
 
 	client := profitbricks.SetAuth(user, password)
 
 	pb := &ProfitbricksManager{
 		client: client,
-		datacenter: datacenter,
 	}
 
-	// generate client and test retrieving account info
-	_, err = do.GetAccount()
+	// generate client and test retrieving datacenters
+	list_datacenters, err = pb.ListDatacenters()
 	if err != nil {
 		return nil, err
 	}
 
-	return do, nil
+	return pb, nil
 }
 
-// GetAccount returns the token related account
-func (m *DigitalOceanManager) GetAccount() (*godo.Account, error) {
-	account, _, err := m.client.Account.Get(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-	return account, nil
-}
+// Fetch and return the UUID of a resource regardless of whether the name orUUID is passed.
+// func get_resource_id(resource_list, identity):
+// 	for r: resource_list; r != nil; r = r.Next(){
+// 		if identity
+// 	}
+//     for resource in resource_list['items']:
+//         if identity in (resource['properties']['name'], resource['id']):
+//             return resource['id']
+//     return None
 
-// CreateVolume creates a Digital Ocean volume
-func (m *DigitalOceanManager) CreateVolume(name, description string, sizeGB int) (*godo.Volume, error) {
-	req := &godo.VolumeCreateRequest{
-		Region:        m.region,
-		Name:          name,
-		Description:   description,
-		SizeGigaBytes: int64(sizeGB),
+// CreateVolume creates a Profitbricks volume
+func (m *ProfitbricksManager) CreateVolume(datacenter string, name, volumeType, licenceType string, size int) (*profitbricks.Volume, error) {
+	req := &profitbricks.VolumeProperties{
+		Size:        size,
+		Name:        name,
+		LicenceType: licenceType,
+		Type:        volumeType,
 	}
 
-	vol, _, err := m.client.Storage.CreateVolume(context.TODO(), req)
+	vol, _, err := m.CreateVolume(context.TODO(), req)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +100,7 @@ func (m *DigitalOceanManager) CreateVolume(name, description string, sizeGB int)
 }
 
 // DeleteVolume deletes a Digital Ocean volume
-func (m *DigitalOceanManager) DeleteVolume(volumeID string) error {
-	_, err := m.client.Storage.DeleteVolume(context.TODO(), volumeID)
+func (m *ProfitbricksManager) DeleteVolume(datacenter string, volumeID string) error {
+	_, err := m.client.DeleteVolume(context.TODO(), datacenter, volumeID)
 	return err
 }
