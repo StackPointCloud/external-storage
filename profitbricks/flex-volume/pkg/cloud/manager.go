@@ -19,6 +19,7 @@ package cloud
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/profitbricks/profitbricks-sdk-go"
 )
@@ -26,15 +27,14 @@ import (
 //https://github.com/profitbricks/profitbricks-sdk-go#create-a-volume
 //https://github.com/profitbricks/profitbricks-sdk-go#delete-a-volume
 
-// VolumeManager is a Digital Ocean cloud volumes operations interface
+type ProfitbricksManager struct {
+	datacenter string
+}
+
+// VolumeManager is a Profitbricks volumes operations interface
 type VolumeManager interface {
 	CreateVolume(name, datacenter, sizeGB int, volumeType string) (*profitbricks.Volume, error)
 	DeleteVolume(datacenter string, volumeID string) error
-}
-
-// ProfitbricksManager communicates with the PB API
-type ProfitbricksManager struct {
-	client *profitbricks
 }
 
 // // TokenSource represents and oauth2 token source
@@ -57,19 +57,26 @@ func NewProfitbricksManager(datacenter string, user string, password string) (*P
 		return nil, errors.New("Profitbricks credentials must be informed")
 	}
 
-	client := profitbricks.SetAuth(user, password)
+	manager := &ProfitbricksManager{
+		datacenter: datacenter,
+	}
+	profitbricks.SetAuth(user, password)
 
-	pb := &ProfitbricksManager{
-		client: client,
+	// generate client and test retrieving all datacenters
+	datacenters := profitbricks.ListDatacenters()
+
+	if datacenters.StatusCode != 200 {
+		return nil, fmt.Errorf("an error occurred listing datacenters: %s", datacenters.Response)
 	}
 
-	// generate client and test retrieving datacenters
-	list_datacenters, err = pb.ListDatacenters()
-	if err != nil {
-		return nil, err
+	for _, dc := range datacenters.Items {
+		if dc.Properties.Name == datacenter {
+			manager.datacenter = datacenter
+			return manager, nil
+		}
 	}
 
-	return pb, nil
+	return nil, fmt.Errorf("datacenter %s not found", datacenter)
 }
 
 // Fetch and return the UUID of a resource regardless of whether the name orUUID is passed.
@@ -83,7 +90,7 @@ func NewProfitbricksManager(datacenter string, user string, password string) (*P
 //     return None
 
 // CreateVolume creates a Profitbricks volume
-func (m *ProfitbricksManager) CreateVolume(datacenter string, name, volumeType, licenceType string, size int) (*profitbricks.Volume, error) {
+func (m *ProfitbricksManager) CreateVolume(name, volumeType, licenceType string, size int) (*profitbricks.Volume, error) {
 	req := &profitbricks.VolumeProperties{
 		Size:        size,
 		Name:        name,
