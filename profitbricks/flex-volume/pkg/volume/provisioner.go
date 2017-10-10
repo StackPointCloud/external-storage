@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/digitalocean/godo"
+	"github.com/external-storage/profitbricks/flex-volume/pkg/cloud"
 	"github.com/golang/glog"
-	"github.com/kubernetes-incubator/external-storage/digitalocean/flex-volume/pkg/cloud"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"github.com/kubernetes-incubator/external-storage/lib/gidallocator"
+	profitbricks "github.com/profitbricks/profitbricks-sdk-go"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -42,7 +42,7 @@ type allocatorInterface interface {
 	Release(volume *v1.PersistentVolume) error
 }
 
-type digitalOceanProvisioner struct {
+type profitbricksProvisioner struct {
 	client    kubernetes.Interface
 	manager   cloud.VolumeManager
 	token     string
@@ -51,31 +51,31 @@ type digitalOceanProvisioner struct {
 	flexDriver string
 }
 
-// NewDigitalOceanProvisioner creates a Digital Ocean volume provisioner
-func NewDigitalOceanProvisioner(client kubernetes.Interface, do cloud.VolumeManager, flexDriver string) (controller.Provisioner, error) {
+// NewProfitbricksProvisioner creates a Profitbricks volume provisioner
+func NewProfitbricksProvisioner(client kubernetes.Interface, pb cloud.VolumeManager, flexDriver string) (controller.Provisioner, error) {
 
 	if client == nil {
 		return nil, errors.New("Provisioner needs the kubernetes client")
 	}
 
-	if do == nil {
-		return nil, errors.New("Provisioner needs the Digital Ocean client")
+	if pb == nil {
+		return nil, errors.New("Provisioner needs the Profitbricks client")
 	}
 
 	allocator := gidallocator.New(client)
-	return &digitalOceanProvisioner{
+	return &profitbricksProvisioner{
 		client:     client,
-		manager:    do,
+		manager:    pb,
 		allocator:  &allocator,
 		flexDriver: flexDriver,
 	}, nil
 }
 
-var _ controller.Provisioner = &digitalOceanProvisioner{}
+var _ controller.Provisioner = &profitbricksProvisioner{}
 
 // Provision creates a volume i.e. the storage asset and returns a PV object for
 // the volume.
-func (p *digitalOceanProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
+func (p *profitbricksProvisioner) Provision(options controller.VolumeOptions) (*v1.PersistentVolume, error) {
 	if options.PVC.Spec.Selector != nil {
 		return nil, fmt.Errorf("claim.Spec.Selector is not supported")
 	}
@@ -119,13 +119,13 @@ func (p *digitalOceanProvisioner) Provision(options controller.VolumeOptions) (*
 	return pv, nil
 }
 
-// createVolume creates a volume at Digital Ocean
-func (p *digitalOceanProvisioner) createVolume(options controller.VolumeOptions) (*godo.Volume, error) {
+// createVolume creates a volume at Profitbricks
+func (p *profitbricksProvisioner) createVolume(options controller.VolumeOptions) (*profitbricks.Volume, error) {
 
 	capacity := options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
 	sizeGB := int(volume.RoundUpSize(capacity.Value(), 1024*1024*1024))
 
-	glog.V(5).Infof("Creating Digital Ocean volume %s sized %d GB", options.PVName, sizeGB)
+	glog.V(5).Infof("Creating Profitbricks volume %s sized %d GB", options.PVName, sizeGB)
 	vol, err := p.manager.CreateVolume(options.PVName, volumeDescription, sizeGB)
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ func (p *digitalOceanProvisioner) createVolume(options controller.VolumeOptions)
 
 // Delete removes the directory that was created by Provision backing the given
 // PV and removes its export from the NFS server.
-func (p *digitalOceanProvisioner) Delete(volume *v1.PersistentVolume) error {
+func (p *profitbricksProvisioner) Delete(volume *v1.PersistentVolume) error {
 	err := p.allocator.Release(volume)
 	if err != nil {
 		return err
@@ -152,6 +152,6 @@ func (p *digitalOceanProvisioner) Delete(volume *v1.PersistentVolume) error {
 		return fmt.Errorf("Volume %s/%s does not contain VolumeID attribute", volume.Namespace, volume.Name)
 	}
 
-	glog.V(5).Infof("Deleting Digital Ocean volume %q ", volID)
+	glog.V(5).Infof("Deleting Profitbricks volume %q ", volID)
 	return p.manager.DeleteVolume(volID)
 }
