@@ -23,7 +23,6 @@ import (
 	"github.com/external-storage/profitbricks/flex-volume/pkg/volume"
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
-	"github.com/profitbricks/profitbricks-sdk-go"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -54,11 +53,6 @@ var (
 
 func main() {
 
-	//Sets username and password
-	profitbricks.SetAuth(credentialsUser, credentialsPassword)
-	//Sets depth.
-	profitbricks.SetDepth("5")
-
 	var config *rest.Config
 	var err error
 
@@ -87,6 +81,7 @@ func main() {
 		glog.Fatalf("Error getting kubernetes server version: %s", err.Error())
 	}
 
+	// Maybe it's not necessary the datacenter here
 	// Create the Profitbricks manager
 	credentials, err := volume.GetCredentialsFromSecret(clientset, *credentialsNamespace, *credentialsDatacenter, *credentialsSecret, *credentialsUser, *credentialsPassword)
 	if err != nil {
@@ -94,14 +89,14 @@ func main() {
 	}
 
 	glog.Info("Creating Profitbricks client")
-	do, err := cloud.NewProfitbricksManager(token)
+	pb, err := cloud.NewProfitbricksManager(credentials)
 	if err != nil {
 		glog.Fatalf("Error creating Profitbricks client: %v", err.Error())
 	}
 
 	// Create the provisioner
 	glog.Infof("Creating Profitbricks provisioner %q", *provisioner)
-	profitbricksProvisioner, err := volume.NewProfitbricksProvisioner(clientset, do, *flexDriver)
+	profitbricksProvisioner, err := volume.NewProfitbricksProvisioner(clientset, pb, *flexDriver)
 	if err != nil {
 		glog.Fatalf("Error creating Profitbricks provisioner: %v", err.Error())
 	}
