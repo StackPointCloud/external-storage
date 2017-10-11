@@ -23,31 +23,9 @@ import (
 	"github.com/profitbricks/profitbricks-sdk-go"
 )
 
-//https://github.com/profitbricks/profitbricks-sdk-go#create-a-volume
-//https://github.com/profitbricks/profitbricks-sdk-go#delete-a-volume
-
 type ProfitbricksManager struct {
 	datacenter string
 }
-
-// VolumeManager is a Profitbricks volumes operations interface
-type VolumeManager interface {
-	CreateVolume(name, datacenter, sizeGB int, volumeType string) (*profitbricks.Volume, error)
-	DeleteVolume(datacenter string, volumeID string) error
-}
-
-// // TokenSource represents and oauth2 token source
-// type tokenSource struct {
-// 	AccessToken string
-// }
-//
-// // Token returns an oauth2 token
-// func (t *tokenSource) Token() (*oauth2.Token, error) {
-// 	token := &oauth2.Token{
-// 		AccessToken: t.AccessToken,
-// 	}
-// 	return token, nil
-// }
 
 // NewProfitbricksManager returns a Profitbricks manager
 func NewProfitbricksManager(datacenter string, user string, password string) (*ProfitbricksManager, error) {
@@ -76,16 +54,6 @@ func NewProfitbricksManager(datacenter string, user string, password string) (*P
 	}
 	return nil, fmt.Errorf("datacenter %s not found", datacenter)
 }
-
-// Fetch and return the UUID of a resource regardless of whether the name orUUID is passed.
-// func get_resource_id(resource_list, identity):
-// 	for r: resource_list; r != nil; r = r.Next(){
-// 		if identity
-// 	}
-//     for resource in resource_list['items']:
-//         if identity in (resource['properties']['name'], resource['id']):
-//             return resource['id']
-//     return None
 
 // CreateVolume creates a Profitbricks volume
 func (m *ProfitbricksManager) CreateVolume(name, volumeType, licenceType string, size int) (*profitbricks.Volume, error) {
