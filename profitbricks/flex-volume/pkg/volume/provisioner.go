@@ -45,7 +45,6 @@ type allocatorInterface interface {
 type profitbricksProvisioner struct {
 	client    kubernetes.Interface
 	manager   cloud.VolumeManager
-	token     string
 	allocator allocatorInterface
 	// gidallocator.Allocator
 	flexDriver string
@@ -107,8 +106,8 @@ func (p *profitbricksProvisioner) Provision(options controller.VolumeOptions) (*
 				FlexVolume: &v1.FlexVolumeSource{
 					Driver: p.flexDriver,
 					Options: map[string]string{
-						"VolumeID":   vol.ID,
-						"VolumeName": vol.Name,
+						"VolumeID":   vol.Id,
+						"VolumeName": vol.Properties.Name,
 					},
 					ReadOnly: false,
 				},

@@ -22,10 +22,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/digitalocean/godo"
-	"github.com/kubernetes-incubator/external-storage/digitalocean/flex-volume/pkg/cloud"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"github.com/kubernetes-incubator/external-storage/lib/gidallocator"
+	"github.com/kubernetes-incubator/external-storage/profitbricks/flex-volume/pkg/cloud"
+	"github.com/profitbricks/profitbricks-sdk-go"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/kubernetes"
@@ -40,16 +40,16 @@ const (
 )
 
 type fakeManager struct {
-	createVolumeFn func(name, description string, sizeGB int) (*godo.Volume, error)
+	createVolumeFn func(name, description string, sizeGB int) (*profitbricks.Volume, error)
 	deleteVolumeFn func(volumeID string) error
 }
 
-func (f *fakeManager) CreateVolume(name, description string, sizeGB int) (*godo.Volume, error) {
+func (f *fakeManager) CreateVolume(name, description string, sizeGB int) (*profitbricks.Volume, error) {
 	if f.createVolumeFn != nil {
 		return f.createVolumeFn(name, description, sizeGB)
 	}
 	// default fake implementation
-	return &godo.Volume{
+	return &profitbricks.Volume{
 		ID:            defaultVolID,
 		Name:          name,
 		Description:   description,
@@ -86,13 +86,13 @@ func (f *fakeAllocator) Release(volume *v1.PersistentVolume) error {
 	return nil
 }
 
-func TestNewDigitalOceanProvisioner(t *testing.T) {
+func TestNewProfitbricksProvisioner(t *testing.T) {
 	testcases := []struct {
 		name    string
 		client  kubernetes.Interface
 		manager cloud.VolumeManager
 		// expected
-		provisioner *digitalOceanProvisioner
+		provisioner *profitbricksProvisioner
 		err         error
 	}{
 		{
@@ -107,19 +107,19 @@ func TestNewDigitalOceanProvisioner(t *testing.T) {
 			&fake.Clientset{},
 			nil,
 			nil,
-			errors.New("Provisioner needs the Digital Ocean client"),
+			errors.New("Provisioner needs the Profitbricks client"),
 		},
 		{
 			"new provisioner",
 			&fake.Clientset{},
 			&fakeManager{},
-			&digitalOceanProvisioner{},
+			&profitbricksProvisioner{},
 			nil,
 		},
 	}
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
-			p, err := NewDigitalOceanProvisioner(test.client, test.manager, "driver-name")
+			p, err := NewprofitbricksProvisioner(test.client, test.manager, "driver-name")
 			if (p == nil || test.provisioner == nil) &&
 				(p != nil || test.provisioner != nil) {
 				t.Error("unexpected provisioner")
@@ -151,7 +151,7 @@ func TestProvision(t *testing.T) {
 			&fakeManager{},
 			&fakeAllocator{},
 			&v1.FlexVolumeSource{
-				Driver: "flex-digitalocean-driver",
+				Driver: "flex-profitbricks-driver",
 				Options: map[string]string{
 					"VolumeID":   defaultVolID,
 					"VolumeName": "test-volume",
@@ -163,7 +163,7 @@ func TestProvision(t *testing.T) {
 	}
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
-			provisioner := digitalOceanProvisioner{
+			provisioner := profitbricksProvisioner{
 				flexDriver: test.flexVolume.Driver,
 				manager:    test.manager,
 				allocator:  test.allocator,
@@ -210,7 +210,7 @@ func TestDelete(t *testing.T) {
 	}
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
-			provisioner := digitalOceanProvisioner{
+			provisioner := profitbricksProvisioner{
 				manager:   test.manager,
 				allocator: test.allocator,
 			}
