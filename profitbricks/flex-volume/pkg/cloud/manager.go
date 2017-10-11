@@ -17,7 +17,6 @@ limitations under the License.
 package cloud
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -71,11 +70,10 @@ func NewProfitbricksManager(datacenter string, user string, password string) (*P
 
 	for _, dc := range datacenters.Items {
 		if dc.Properties.Name == datacenter {
-			manager.datacenter = datacenter
+			manager.datacenter = dc.Id
 			return manager, nil
 		}
 	}
-
 	return nil, fmt.Errorf("datacenter %s not found", datacenter)
 }
 
@@ -91,23 +89,26 @@ func NewProfitbricksManager(datacenter string, user string, password string) (*P
 
 // CreateVolume creates a Profitbricks volume
 func (m *ProfitbricksManager) CreateVolume(name, volumeType, licenceType string, size int) (*profitbricks.Volume, error) {
-	req := &profitbricks.VolumeProperties{
-		Size:        size,
-		Name:        name,
-		LicenceType: licenceType,
-		Type:        volumeType,
+	req := profitbricks.Volume{
+		Properties: profitbricks.VolumeProperties{
+			Size:        size,
+			Name:        name,
+			LicenceType: licenceType,
+			Type:        volumeType,
+		},
 	}
 
-	vol, _, err := m.CreateVolume(context.TODO(), req)
-	if err != nil {
-		return nil, err
+	vol := profitbricks.CreateVolume(m.datacenter, req)
+
+	if vol.StatusCode != 202 {
+		return nil, fmt.Errorf("an error occurred creating volume: %s", vol.Id)
 	}
 
-	return vol, nil
+	return &vol, nil
 }
 
 // DeleteVolume deletes a Digital Ocean volume
-func (m *ProfitbricksManager) DeleteVolume(datacenter string, volumeID string) error {
-	_, err := m.client.DeleteVolume(context.TODO(), datacenter, volumeID)
-	return err
+func (m *ProfitbricksManager) DeleteVolume(volumeID string) error {
+	profitbricks.DeleteVolume(m.datacenter, volumeID)
+	return nil
 }
