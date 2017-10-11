@@ -27,6 +27,12 @@ type ProfitbricksManager struct {
 	datacenter string
 }
 
+// VolumeManager is a Profitbricks volumes operations interface
+type VolumeManager interface {
+	CreateVolume(name string, datacenter string, sizeGB int, volumeType string, licenceType string) (*profitbricks.Volume, error)
+	DeleteVolume(datacenter string, volumeID string) error
+}
+
 // NewProfitbricksManager returns a Profitbricks manager
 func NewProfitbricksManager(datacenter string, user string, password string) (*ProfitbricksManager, error) {
 
