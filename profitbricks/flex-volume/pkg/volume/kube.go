@@ -30,35 +30,35 @@ type ProfitbricksCredentials struct {
 }
 
 // GetCredentialsFromSecret locates and returns credentials from kubernetes secret
-func GetCredentialsFromSecret(client kubernetes.Interface, credentialsNamespace, credentialsDatacenter, credentialsSecret, credentialsUser string, credentialsPassword string) (*ProfitbricksCredentials, error) {
-
-	credentials := &ProfitbricksCredentials{
-		datacenter: credentialsDatacenter,
-		user:       credentialsUser,
-		password:   credentialsPassword,
-	}
+func GetCredentialsFromSecret(client kubernetes.Interface, namespace, secretName, datacenterKey, userKey string, passwordKey string) (*ProfitbricksCredentials, error) {
 
 	if client == nil {
 		return nil, fmt.Errorf("Kubernetes client not present")
 	}
-	secrets, err := client.Core().Secrets(credentialsNamespace).Get(credentialsSecret, metav1.GetOptions{})
+	secrets, err := client.Core().Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	datacenter, ok := secrets.Data[credentialsDatacenter]
+	datacenter, ok := secrets.Data[datacenterKey]
 	if !ok {
-		return nil, fmt.Errorf("Cannot find Profitbricks Datacenter at secret %s/%s/%s", credentialsNamespace, credentialsSecret, credentialsDatacenter)
+		return nil, fmt.Errorf("Cannot find Profitbricks Datacenter at secret %s/%s/%s", namespace, secretName, datacenterKey)
 	}
 
-	user, ok := secrets.Data[credentialsUser]
+	user, ok := secrets.Data[userKey]
 	if !ok {
-		return nil, fmt.Errorf("Cannot find Profitbricks User at secret %s/%s/%s", credentialsNamespace, credentialsSecret, credentialsUser)
+		return nil, fmt.Errorf("Cannot find Profitbricks User at secret %s/%s/%s", namespace, secretName, userKey)
 	}
 
-	password, ok := secrets.Data[credentialsPassword]
+	password, ok := secrets.Data[passwordKey]
 	if !ok {
-		return nil, fmt.Errorf("Cannot find Profitbricks Password at secret %s/%s/%s", credentialsNamespace, credentialsSecret, credentialsPassword)
+		return nil, fmt.Errorf("Cannot find Profitbricks Password at secret %s/%s/%s", namespace, secretName, passwordKey)
+	}
+
+	credentials := &ProfitbricksCredentials{
+		datacenter: datacenterKey,
+		user:       userKey,
+		password:   passwordKey,
 	}
 
 	credentials.datacenter = string(datacenter)
