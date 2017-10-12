@@ -55,15 +55,9 @@ func GetCredentialsFromSecret(client kubernetes.Interface, namespace, secretName
 		return nil, fmt.Errorf("Cannot find Profitbricks Password at secret %s/%s/%s", namespace, secretName, passwordKey)
 	}
 
-	credentials := &ProfitbricksCredentials{
-		datacenter: datacenterKey,
-		user:       userKey,
-		password:   passwordKey,
-	}
-
-	credentials.datacenter = string(datacenter)
-	credentials.user = string(user)
-	credentials.password = string(password)
-
-	return credentials, nil
+	return &ProfitbricksCredentials{
+		datacenter: string(datacenter),
+		user:       string(user),
+		password:   string(password),
+	}, nil
 }
