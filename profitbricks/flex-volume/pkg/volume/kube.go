@@ -23,30 +23,47 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+type ProfitbricksCredentials struct {
+	datacenter string
+	user       string
+	password   string
+}
+
 // GetCredentialsFromSecret locates and returns credentials from kubernetes secret
-func GetCredentialsFromSecret(client kubernetes.Interface, credentialsNamespace, credentialsDatacenter, credentialsSecret, credentialsUser string, credentialsPassword string) (string, error) {
+func GetCredentialsFromSecret(client kubernetes.Interface, credentialsNamespace, credentialsDatacenter, credentialsSecret, credentialsUser string, credentialsPassword string) (*ProfitbricksCredentials, error) {
+
+	credentials := &ProfitbricksCredentials{
+		datacenter: credentialsDatacenter,
+		user:       credentialsUser,
+		password:   credentialsPassword,
+	}
 
 	if client == nil {
-		return "", fmt.Errorf("Kubernetes client not present")
+		return nil, fmt.Errorf("Kubernetes client not present")
 	}
 	secrets, err := client.Core().Secrets(credentialsNamespace).Get(credentialsSecret, metav1.GetOptions{})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	datacenter, ok := secrets.Data[credentialsDatacenter]
 	if !ok {
-		return "", fmt.Errorf("Cannot find Profitbricks Datacenter at secret %s/%s/%s", credentialsNamespace, credentialsSecret, credentialsDatacenter)
+		return nil, fmt.Errorf("Cannot find Profitbricks Datacenter at secret %s/%s/%s", credentialsNamespace, credentialsSecret, credentialsDatacenter)
 	}
 
 	user, ok := secrets.Data[credentialsUser]
 	if !ok {
-		return "", fmt.Errorf("Cannot find Profitbricks User at secret %s/%s/%s", credentialsNamespace, credentialsSecret, credentialsUser)
+		return nil, fmt.Errorf("Cannot find Profitbricks User at secret %s/%s/%s", credentialsNamespace, credentialsSecret, credentialsUser)
 	}
 
 	password, ok := secrets.Data[credentialsPassword]
 	if !ok {
-		return "", fmt.Errorf("Cannot find Profitbricks Password at secret %s/%s/%s", credentialsNamespace, credentialsSecret, credentialsPassword)
+		return nil, fmt.Errorf("Cannot find Profitbricks Password at secret %s/%s/%s", credentialsNamespace, credentialsSecret, credentialsPassword)
 	}
-	return string(datacenter, user, password), nil
+
+	credentials.datacenter = string(datacenter)
+	credentials.user = string(user)
+	credentials.password = string(password)
+
+	return credentials, nil
 }
