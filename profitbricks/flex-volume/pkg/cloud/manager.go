@@ -29,8 +29,8 @@ type ProfitbricksManager struct {
 
 // VolumeManager is a Profitbricks volumes operations interface
 type VolumeManager interface {
-	CreateVolume(name string, datacenter string, sizeGB int, volumeType string, licenceType string) (*profitbricks.Volume, error)
-	DeleteVolume(datacenter string, volumeID string) error
+	CreateVolume(name string, sizeGB int, volumeType string, licenceType string) (*profitbricks.Volume, error)
+	DeleteVolume(volumeID string) error
 }
 
 // NewProfitbricksManager returns a Profitbricks manager

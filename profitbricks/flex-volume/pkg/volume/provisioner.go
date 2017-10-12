@@ -25,7 +25,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"github.com/kubernetes-incubator/external-storage/lib/gidallocator"
-	profitbricks "github.com/profitbricks/profitbricks-sdk-go"
+	"github.com/profitbricks/profitbricks-sdk-go"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -35,6 +35,8 @@ import (
 const (
 	volumeDescription   = "Kubernetes dynamic provisioned"
 	volumeNameMaxLenght = 64
+	licenceType         = "LINUX"
+	volumeType          = "HDD"
 )
 
 type allocatorInterface interface {
@@ -125,7 +127,7 @@ func (p *profitbricksProvisioner) createVolume(options controller.VolumeOptions)
 	sizeGB := int(volume.RoundUpSize(capacity.Value(), 1024*1024*1024))
 
 	glog.V(5).Infof("Creating Profitbricks volume %s sized %d GB", options.PVName, sizeGB)
-	vol, err := p.manager.CreateVolume(options.PVName, volumeDescription, sizeGB)
+	vol, err := p.manager.CreateVolume(options.PVName, sizeGB, licenceType, volumeType)
 	if err != nil {
 		return nil, err
 	}
