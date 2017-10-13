@@ -13,7 +13,7 @@
 # limitations under the License.
 
 ifeq ($(REGISTRY),)
-	REGISTRY = quay.io/stackpoint/digitalocean-provisioner
+	REGISTRY = quay.io/stackpoint/profitbricks-provisioner
 endif
 
 ifeq ($(VERSION),)
@@ -23,14 +23,14 @@ endif
 all: build
 
 build: ci
-	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o digitalocean-provisioner ./cmd/digitalocean-provisioner
+	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o profitbricks-provisioner ./cmd/profitbricks-provisioner
 .PHONY: all build
 
 container: build quick-container
 .PHONY: container
 
 quick-container:
-	cp digitalocean-provisioner deploy/docker/digitalocean-provisioner
+	cp profitbricks-provisioner deploy/docker/profitbricks-provisioner
 	docker build -t $(REGISTRY):$(VERSION) deploy/docker
 .PHONY: quick-container
 
@@ -53,6 +53,6 @@ push: container
 .PHONY: push
 
 clean:
-	rm -f digitalocean-provisioner
-	rm -f deploy/docker/digitalocean-provisioner
+	rm -f profitbricks-provisioner
+	rm -f deploy/docker/profitbricks-provisioner
 .PHONY: clean

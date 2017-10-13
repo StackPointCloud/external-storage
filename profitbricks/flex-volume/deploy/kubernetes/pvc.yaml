@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   name: pvdo1
 spec:
-  storageClassName: digitalocean
+  storageClassName: profitbricks
   accessModes:
     - ReadWriteOnce
   resources:

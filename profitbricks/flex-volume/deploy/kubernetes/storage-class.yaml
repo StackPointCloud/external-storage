@@ -3,5 +3,5 @@ kind: StorageClass
 metadata:
   annotations:
     storageclass.beta.kubernetes.io/is-default-class: "true"
-  name: digitalocean
-provisioner: digitalocean/flex-volume-provisioner
+  name: profitbricks
+provisioner: profitbricks/flex-volume-provisioner

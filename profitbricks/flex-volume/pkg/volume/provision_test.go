@@ -22,9 +22,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/external-storage/profitbricks/flex-volume/pkg/cloud"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"github.com/kubernetes-incubator/external-storage/lib/gidallocator"
-	"github.com/kubernetes-incubator/external-storage/profitbricks/flex-volume/pkg/cloud"
 	"github.com/profitbricks/profitbricks-sdk-go"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -40,17 +40,18 @@ const (
 )
 
 type fakeManager struct {
-	createVolumeFn func(name, description string, sizeGB int) (*profitbricks.Volume, error)
+	createVolumeFn func(name string, size int, volumeType string, licenceType string) (*profitbricks.Volume, error)
 	deleteVolumeFn func(volumeID string) error
 }
 
-func (f *fakeManager) CreateVolume(name, description string, sizeGB int) (*profitbricks.Volume, error) {
+func (f *fakeManager) CreateVolume(name string, size int, volumeType string, licenceType string) (*profitbricks.Volume, error) {
 	if f.createVolumeFn != nil {
-		return f.createVolumeFn(name, description, sizeGB)
+		return f.createVolumeFn(name, size, volumeType, licenceType)
 	}
+
 	// default fake implementation
 	return &profitbricks.Volume{
-		ID:            defaultVolID,
+		Id:            defaultVolID,
 		Name:          name,
 		Description:   description,
 		SizeGigaBytes: int64(sizeGB),

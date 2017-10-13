@@ -14,5 +14,5 @@
 
 FROM alpine:3.6
 RUN apk update --no-cache && apk add ca-certificates
-COPY digitalocean-provisioner /
-ENTRYPOINT ["/digitalocean-provisioner"]
+COPY profitbricks-provisioner /
+ENTRYPOINT ["/profitbricks-provisioner"]
