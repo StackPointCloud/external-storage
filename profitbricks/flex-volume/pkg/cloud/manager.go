@@ -23,6 +23,12 @@ import (
 	"github.com/profitbricks/profitbricks-sdk-go"
 )
 
+type ProfitbricksCredentials struct {
+	Datacenter string
+	User       string
+	Password   string
+}
+
 type ProfitbricksManager struct {
 	datacenter string
 }
@@ -34,16 +40,17 @@ type VolumeManager interface {
 }
 
 // NewProfitbricksManager returns a Profitbricks manager
-func NewProfitbricksManager(datacenter string, user string, password string) (*ProfitbricksManager, error) {
+func NewProfitbricksManager(credentials *ProfitbricksCredentials) (*ProfitbricksManager, error) {
 
-	if user == "" || password == "" {
+	if credentials.User == "" || credentials.Password == "" {
 		return nil, errors.New("Profitbricks credentials must be informed")
 	}
 
 	manager := &ProfitbricksManager{
-		datacenter: datacenter,
+		datacenter: credentials.Datacenter,
 	}
-	profitbricks.SetAuth(user, password)
+	// set auth
+	profitbricks.SetAuth(credentials.User, credentials.Password)
 
 	// generate client and test retrieving all datacenters
 	datacenters := profitbricks.ListDatacenters()
@@ -53,16 +60,16 @@ func NewProfitbricksManager(datacenter string, user string, password string) (*P
 	}
 
 	for _, dc := range datacenters.Items {
-		if dc.Properties.Name == datacenter {
+		if dc.Properties.Name == credentials.Datacenter {
 			manager.datacenter = dc.Id
 			return manager, nil
 		}
 	}
-	return nil, fmt.Errorf("datacenter %s not found", datacenter)
+	return nil, fmt.Errorf("datacenter %s not found", credentials.Datacenter)
 }
 
 // CreateVolume creates a Profitbricks volume
-func (m *ProfitbricksManager) CreateVolume(name, volumeType, licenceType string, size int) (*profitbricks.Volume, error) {
+func (m *ProfitbricksManager) CreateVolume(name string, size int, volumeType string, licenceType string) (*profitbricks.Volume, error) {
 	req := profitbricks.Volume{
 		Properties: profitbricks.VolumeProperties{
 			Size:        size,

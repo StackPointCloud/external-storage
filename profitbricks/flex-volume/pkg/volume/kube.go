@@ -19,18 +19,13 @@ package volume
 import (
 	"fmt"
 
+	"github.com/external-storage/profitbricks/flex-volume/pkg/cloud"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-type ProfitbricksCredentials struct {
-	datacenter string
-	user       string
-	password   string
-}
-
 // GetCredentialsFromSecret locates and returns credentials from kubernetes secret
-func GetCredentialsFromSecret(client kubernetes.Interface, namespace, secretName, datacenterKey, userKey string, passwordKey string) (*ProfitbricksCredentials, error) {
+func GetCredentialsFromSecret(client kubernetes.Interface, namespace, secretName, datacenterKey, userKey string, passwordKey string) (*cloud.ProfitbricksCredentials, error) {
 
 	if client == nil {
 		return nil, fmt.Errorf("Kubernetes client not present")
@@ -55,9 +50,9 @@ func GetCredentialsFromSecret(client kubernetes.Interface, namespace, secretName
 		return nil, fmt.Errorf("Cannot find Profitbricks Password at secret %s/%s/%s", namespace, secretName, passwordKey)
 	}
 
-	return &ProfitbricksCredentials{
-		datacenter: string(datacenter),
-		user:       string(user),
-		password:   string(password),
+	return &cloud.ProfitbricksCredentials{
+		Datacenter: string(datacenter),
+		User:       string(user),
+		Password:   string(password),
 	}, nil
 }

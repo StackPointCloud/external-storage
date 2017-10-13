@@ -127,7 +127,7 @@ func (p *profitbricksProvisioner) createVolume(options controller.VolumeOptions)
 	sizeGB := int(volume.RoundUpSize(capacity.Value(), 1024*1024*1024))
 
 	glog.V(5).Infof("Creating Profitbricks volume %s sized %d GB", options.PVName, sizeGB)
-	vol, err := p.manager.CreateVolume(options.PVName, sizeGB, licenceType, volumeType)
+	vol, err := p.manager.CreateVolume(options.PVName, sizeGB, volumeType, licenceType)
 	if err != nil {
 		return nil, err
 	}
