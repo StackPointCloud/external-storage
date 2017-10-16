@@ -83,7 +83,7 @@ func main() {
 
 	// Maybe it's not necessary the datacenter here
 	// Create the Profitbricks manager
-	credentials, err := volume.GetCredentialsFromSecret(clientset, *credentialsNamespace, *credentialsDatacenter, *credentialsSecret, *credentialsUser, *credentialsPassword)
+	credentials, err := volume.GetCredentialsFromSecret(clientset, *credentialsNamespace, *credentialsSecret, *credentialsDatacenter, *credentialsUser, *credentialsPassword)
 	if err != nil {
 		glog.Fatalf("Error retrieving Profitbricks credentials: %v", err.Error())
 	}

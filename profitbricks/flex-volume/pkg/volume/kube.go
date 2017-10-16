@@ -25,7 +25,7 @@ import (
 )
 
 // GetCredentialsFromSecret locates and returns credentials from kubernetes secret
-func GetCredentialsFromSecret(client kubernetes.Interface, namespace, secretName, datacenterKey, userKey string, passwordKey string) (*cloud.ProfitbricksCredentials, error) {
+func GetCredentialsFromSecret(client kubernetes.Interface, namespace string, secretName string, datacenterKey string, userKey string, passwordKey string) (*cloud.ProfitbricksCredentials, error) {
 
 	if client == nil {
 		return nil, fmt.Errorf("Kubernetes client not present")

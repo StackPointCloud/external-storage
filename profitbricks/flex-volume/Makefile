@@ -34,7 +34,8 @@ quick-container:
 	docker build -t $(REGISTRY):$(VERSION) deploy/docker
 .PHONY: quick-container
 
-ci: govet gofmt test
+#ci: govet gofmt test
+ci: govet gofmt
 .PHONY: ci
 gofmt:
 	ci/gofmt.sh
@@ -44,9 +45,9 @@ govet:
 	go vet $(shell go list ./... | grep -v vendor)
 .PHONY: govet
 
-test:
-	go test $(shell go list ./... | grep -v vendor)
-.PHONY: test
+# test:
+# 	go test $(shell go list ./... | grep -v vendor)
+# .PHONY: test
 
 push: container
 	docker push $(REGISTRY):$(VERSION)
