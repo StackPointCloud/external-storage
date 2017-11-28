@@ -60,7 +60,7 @@ func NewProfitbricksManager(credentials *ProfitbricksCredentials) (*Profitbricks
 	}
 
 	for _, dc := range datacenters.Items {
-		if dc.Properties.Name == credentials.Datacenter {
+		if dc.Id == credentials.Datacenter {
 			manager.datacenter = dc.Id
 			return manager, nil
 		}
