@@ -3,6 +3,7 @@
 *.dll
 *.so
 *.dylib
+oneandone-provisioner
 
 # Test binary, build with `go test -c`
 *.test
