@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/1and1/oneandone-cloudserver-sdk-go"
 )
@@ -95,7 +96,20 @@ func (m *OneandoneManager) CreateBlockStorage(name string, size int, description
 
 // DeleteBlockStorage deletes a 1&1 block storage
 func (m *OneandoneManager) DeleteBlockStorage(storageID string) error {
-	_, err := m.api.DeleteBlockStorage(storageID)
+	storage, err := m.api.GetBlockStorage(storageID)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.api.DeleteBlockStorage(storage.Id)
+	if err != nil {
+		time.Sleep(1 * time.Second)
+		_, err = m.api.DeleteBlockStorage(storage.Id)
+		if err != nil {
+			return err
+		}
+	}
+
 	return err
 }
 
