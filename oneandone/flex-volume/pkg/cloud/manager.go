@@ -33,7 +33,8 @@ type OneandoneCredentials struct {
 
 // OneandoneManager is a 1&1 client
 type OneandoneManager struct {
-	api *oneandone.API
+	api         *oneandone.API
+	credentials *OneandoneCredentials
 }
 
 // BlockStorageManager is a 1&1 block storage operations interface
@@ -53,6 +54,7 @@ func NewOneandoneManager(credentials *OneandoneCredentials) (*OneandoneManager, 
 	// set auth
 	manager.api = oneandone.New(credentials.Token, oneandone.BaseUrl)
 
+	manager.credentials = credentials
 	// generate client and test retrieving all datacenters
 	pong, err := manager.api.PingAuth()
 
@@ -72,13 +74,14 @@ func (m *OneandoneManager) CreateBlockStorage(name string, size int, description
 	var err error
 
 	if !m.isValidUUID(datacenterID) {
-		uuid, err = m.getDatacenterID(datacenterID)
+		uuid, err = m.getDatacenterID(m.credentials.DatacenterID)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		uuid = datacenterID
+		uuid = m.credentials.DatacenterID
 	}
+
 	_, storage, err := m.api.CreateBlockStorage(&oneandone.BlockStorageRequest{
 		Name: name,
 
@@ -88,7 +91,7 @@ func (m *OneandoneManager) CreateBlockStorage(name string, size int, description
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("an error occurred creating block storag: %s", err.Error())
+		return nil, fmt.Errorf("an error occurred creating block storage: %s %s %s %s %s", err.Error(), "Datacenter ID raw", m.credentials.DatacenterID, "Datacenter ID", uuid)
 	}
 
 	return storage, nil

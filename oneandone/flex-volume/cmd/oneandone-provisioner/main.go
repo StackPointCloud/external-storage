@@ -68,7 +68,6 @@ func main() {
 		glog.Fatalf("Error retrieving 1&1 credentials: %v", err.Error())
 	}
 
-	glog.Info("Creating 1&1 client")
 	oneandoneManager, err := cloud.NewOneandoneManager(credentials)
 	if err != nil {
 		glog.Fatalf("Error creating 1&1 client: %v", err.Error())
