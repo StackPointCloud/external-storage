@@ -22,13 +22,14 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/1and1/oneandone-cloudserver-sdk-go"
+	"github.com/StackPointCloud/oneandone-cloudserver-sdk-go"
 )
 
 // OneandoneCredentials contains 1&1 credentials
 type OneandoneCredentials struct {
-	Token        string
-	DatacenterID string
+	Token          string
+	DatacenterID   string
+	ExecutionGroup string
 }
 
 // OneandoneManager is a 1&1 client
@@ -83,11 +84,11 @@ func (m *OneandoneManager) CreateBlockStorage(name string, size int, description
 	}
 
 	_, storage, err := m.api.CreateBlockStorage(&oneandone.BlockStorageRequest{
-		Name: name,
-
-		Description:  description,
-		Size:         &size,
-		DatacenterId: uuid,
+		Name:           name,
+		ExecutionGroup: m.credentials.ExecutionGroup,
+		Description:    description,
+		Size:           &size,
+		DatacenterId:   uuid,
 	})
 
 	if err != nil {

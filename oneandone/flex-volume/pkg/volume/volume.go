@@ -9,7 +9,7 @@ import (
 )
 
 // GetCredentialsFromSecret is a
-func GetCredentialsFromSecret(client kubernetes.Interface, namespace string, secretName string, datacenterKey string, tokenKey string) (*cloud.OneandoneCredentials, error) {
+func GetCredentialsFromSecret(client kubernetes.Interface, namespace string, secretName string, datacenterKey string, tokenKey string, executionGroupKey string) (*cloud.OneandoneCredentials, error) {
 
 	if client == nil {
 		return nil, fmt.Errorf("Kubernetes client not present")
@@ -29,8 +29,14 @@ func GetCredentialsFromSecret(client kubernetes.Interface, namespace string, sec
 		return nil, fmt.Errorf("Cannot find 1&1 token at secret %s/%s/%s", namespace, secretName, tokenKey)
 	}
 
+	executionGroup, ok := secrets.Data[executionGroupKey]
+	if !ok {
+		return nil, fmt.Errorf("Cannot find exectuion group at secret %s/%s/%s", namespace, secretName, executionGroupKey)
+	}
+
 	return &cloud.OneandoneCredentials{
-		Token:        string(token),
-		DatacenterID: string(datacenter),
+		Token:          string(token),
+		DatacenterID:   string(datacenter),
+		ExecutionGroup: string(executionGroup),
 	}, nil
 }

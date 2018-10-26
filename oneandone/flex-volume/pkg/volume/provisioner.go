@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/1and1/oneandone-cloudserver-sdk-go"
+	"github.com/StackPointCloud/oneandone-cloudserver-sdk-go"
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/lib/controller"
 	"github.com/kubernetes-incubator/external-storage/lib/gidallocator"

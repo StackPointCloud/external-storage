@@ -31,6 +31,7 @@ var (
 	credentialsSecret     = flag.String("credentials-secret", defaultCredentialsSecret, "Secret name for the 1&1 secret")
 	credentialsToken      = flag.String("credentials-token", defaultCredentialsToken, "Secret key for the 1&1 Token")
 	credentilasDatacenter = flag.String("credentials-datacenter", defaultCredentialsDatacenter, "1&1 Datacenter")
+	executionGroup        = flag.String("execution-group", "", "Execution group")
 )
 
 func main() {
@@ -63,7 +64,7 @@ func main() {
 	}
 
 	// Create the 1&1 manager
-	credentials, err := volume.GetCredentialsFromSecret(clientset, *credentialsNamespace, *credentialsSecret, *credentilasDatacenter, *credentialsToken)
+	credentials, err := volume.GetCredentialsFromSecret(clientset, *credentialsNamespace, *credentialsSecret, *credentilasDatacenter, *credentialsToken, *executionGroup)
 	if err != nil {
 		glog.Fatalf("Error retrieving 1&1 credentials: %v", err.Error())
 	}
